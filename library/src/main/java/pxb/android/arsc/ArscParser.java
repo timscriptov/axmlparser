@@ -1,18 +1,3 @@
-/*
- * Copyright (c) 2009-2013 Panxiaobo
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package pxb.android.arsc;
 
 import org.jetbrains.annotations.Contract;
@@ -61,11 +46,9 @@ import java.util.Map;
  * <li>Apktool https://code.google.com/p/android-apktool</li>
  * <li>Android http://source.android.com/</li>
  * </ul>
- *
- * @author bob
  */
 public class ArscParser implements ResConst {
-    public static final int TYPE_STRING = 0x03;
+    static final int TYPE_STRING = 0x03;
     /**
      * If set, this resource has been declared public, so libraries are allowed
      * to reference it.
@@ -76,20 +59,21 @@ public class ArscParser implements ResConst {
      * is followed by an array of ResTable_map structures.
      */
     final static short ENTRY_FLAG_COMPLEX = 0x0001;
-    private final ByteBuffer in;
-    private final List<Pkg> pkgs = new ArrayList<>();
+    private static final boolean DEBUG = false;
     private int fileSize = -1;
+    private final ByteBuffer in;
     private String[] keyNamesX;
-    private Pkg pkg;
+    private final List<Pkg> pkgs = new ArrayList<>();
     private String[] strings;
-    private String[] typeNamesX;
 
-    public ArscParser(byte[] b) {
+    ArscParser(byte[] b) {
         this.in = ByteBuffer.wrap(b).order(ByteOrder.LITTLE_ENDIAN);
     }
 
     private static void D(String fmt, Object... args) {
-        System.out.format(String.format(fmt, args));
+        if (DEBUG) {
+            System.out.println(String.format(fmt, args));
+        }
     }
 
     public List<Pkg> parse() throws IOException {
@@ -106,8 +90,10 @@ public class ArscParser implements ResConst {
             switch (chunk.type) {
                 case RES_STRING_POOL_TYPE:
                     strings = StringItems.read(in);
-                    for (int i = 0; i < strings.length; i++) {
-                        D("STR [%08x] %s", i, strings[i]);
+                    if (DEBUG) {
+                        for (int i = 0; i < strings.length; i++) {
+                            D("STR [%08x] %s", i, strings[i]);
+                        }
                     }
                     break;
                 case RES_TABLE_PACKAGE_TYPE:
@@ -214,7 +200,7 @@ public class ArscParser implements ResConst {
             in.position(nextPisition);
         }
 
-        pkg = new Pkg(pid, name);
+        Pkg pkg = new Pkg(pid, name);
         pkgs.add(pkg);
 
         int typeStringOff = in.getInt();
@@ -222,6 +208,7 @@ public class ArscParser implements ResConst {
         int keyStringOff = in.getInt();
         int specNameCount = in.getInt();
 
+        String[] typeNamesX;
         {
             Chunk chunk = new Chunk();
             if (chunk.type != RES_STRING_POOL_TYPE) {
@@ -236,8 +223,10 @@ public class ArscParser implements ResConst {
                 throw new RuntimeException();
             }
             keyNamesX = StringItems.read(in);
-            for (int i = 0; i < keyNamesX.length; i++) {
-                D("STR [%08x] %s", i, keyNamesX[i]);
+            if (DEBUG) {
+                for (int i = 0; i < keyNamesX.length; i++) {
+                    D("STR [%08x] %s", i, keyNamesX[i]);
+                }
             }
             in.position(chunk.location + chunk.size);
         }
@@ -294,7 +283,6 @@ public class ArscParser implements ResConst {
                             readEntry(config, spec);
                         }
                     }
-
                     t.addConfig(config);
                 }
                 break;
@@ -320,12 +308,12 @@ public class ArscParser implements ResConst {
 
     /* pkg */class Chunk {
 
-        public final int headSize;
-        public final int location;
         public final int size;
         public final int type;
+        final int headSize;
+        final int location;
 
-        public Chunk() {
+        Chunk() {
             location = in.position();
             type = in.getShort() & 0xFFFF;
             headSize = in.getShort() & 0xFFFF;

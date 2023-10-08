@@ -1,18 +1,3 @@
-/*
- * Copyright (c) 2009-2013 Panxiaobo
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package pxb.android.arsc;
 
 import org.jetbrains.annotations.NotNull;
@@ -30,9 +15,6 @@ import java.util.*;
 
 /**
  * Write pkgs to an arsc file
- *
- * @author bob
- * @see ArscParser
  */
 public class ArscWriter implements ResConst {
     private final List<PkgCtx> ctxs = new ArrayList<>(5);
@@ -40,7 +22,7 @@ public class ArscWriter implements ResConst {
     private final Map<String, StringItem> strTable = new TreeMap<String, StringItem>();
     private final StringItems strTable0 = new StringItems();
 
-    public ArscWriter(List<Pkg> pkgs) {
+    private ArscWriter(List<Pkg> pkgs) {
         this.pkgs = pkgs;
     }
 
@@ -134,7 +116,8 @@ public class ArscWriter implements ResConst {
                     for (ResEntry e : config.resources.values()) {
                         e.wOffset = pkgSize - entryBase;
                         pkgSize += 8;// size,flag,keyString
-                        if (e.value instanceof BagValue big) {
+                        if (e.value instanceof BagValue) {
+                            BagValue big = (BagValue) e.value;
                             pkgSize += 8 + big.map.size() * 12;
                         } else {
                             pkgSize += 8;
@@ -150,7 +133,7 @@ public class ArscWriter implements ResConst {
         return size;
     }
 
-    private List<PkgCtx> prepare() throws IOException {
+    private void prepare() throws IOException {
         for (Pkg pkg : pkgs) {
             PkgCtx ctx = new PkgCtx();
             ctx.pkg = pkg;
@@ -177,7 +160,6 @@ public class ArscWriter implements ResConst {
             ctx.typeNames0.prepare();
         }
         strTable0.prepare();
-        return ctxs;
     }
 
     public byte[] toByteArray() throws IOException {
@@ -329,7 +311,7 @@ public class ArscWriter implements ResConst {
                             flag &= ~ArscParser.ENTRY_FLAG_COMPLEX;
                         }
                         out.putShort((short) flag);
-                        out.putInt(pctx.keyNames.get(e.spec.name).index);
+                        out.putInt(Objects.requireNonNull(pctx.keyNames.get(e.spec.name)).index);
                         if (isBag) {
                             BagValue bag = (BagValue) e.value;
                             out.putInt(bag.parent);
@@ -352,14 +334,14 @@ public class ArscWriter implements ResConst {
         out.put((byte) 0);
         out.put((byte) value.type);
         if (value.type == ArscParser.TYPE_STRING) {
-            out.putInt(strTable.get(value.raw).index);
+            out.putInt(Objects.requireNonNull(strTable.get(value.raw)).index);
         } else {
             out.putInt(value.data);
         }
     }
 
     private static class PkgCtx {
-        public int keyStringOff;
+        int keyStringOff;
         Map<String, StringItem> keyNames = new HashMap<>();
         StringItems keyNames0 = new StringItems();
         int offset;
@@ -370,7 +352,7 @@ public class ArscWriter implements ResConst {
         StringItems typeNames0 = new StringItems();
         int typeStringOff;
 
-        public void addKeyName(String name) {
+        void addKeyName(String name) {
             if (keyNames.containsKey(name)) {
                 return;
             }
@@ -379,7 +361,7 @@ public class ArscWriter implements ResConst {
             keyNames0.add(stringItem);
         }
 
-        public void addTypeName(int id, String name) {
+        void addTypeName(int id, String name) {
             while (typeNames.size() <= id) {
                 typeNames.add(null);
             }

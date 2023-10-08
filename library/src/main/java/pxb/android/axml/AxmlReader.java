@@ -1,18 +1,3 @@
-/*
- * Copyright (c) 2009-2013 Panxiaobo
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package pxb.android.axml;
 
 import java.io.IOException;
@@ -26,14 +11,15 @@ import static pxb.android.axml.AxmlParser.*;
  * @author <a href="mailto:pxb1988@gmail.com">Panxiaobo</a>
  */
 public class AxmlReader {
-    public static final NodeVisitor EMPTY_VISITOR = new NodeVisitor() {
+    private static final NodeVisitor EMPTY_VISITOR = new NodeVisitor() {
+
         @Override
         public NodeVisitor child(String ns, String name) {
             return this;
         }
 
     };
-    final AxmlParser parser;
+    private final AxmlParser parser;
 
     public AxmlReader(byte[] data) {
         super();
@@ -78,8 +64,7 @@ public class AxmlReader {
                 case END_FILE:
                     return;
                 default:
-//                    logger.warn();
-                    System.out.println("Unsupported tag: " + type);
+                    System.err.println("AxmlReader: Unsupported tag: " + type);
             }
         }
     }

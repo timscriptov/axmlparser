@@ -1,21 +1,7 @@
-/*
- * Copyright (c) 2009-2013 Panxiaobo
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package pxb.android.axml;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import pxb.android.ResConst;
 import pxb.android.StringItems;
 
@@ -34,24 +20,27 @@ import static pxb.android.axml.NodeVisitor.TYPE_STRING;
  */
 public class AxmlParser implements ResConst {
 
-    public static final int END_FILE = 7;
-    public static final int END_NS = 5;
-    public static final int END_TAG = 3;
-    public static final int START_FILE = 1;
-    public static final int START_NS = 4;
-    public static final int START_TAG = 2;
-    public static final int TEXT = 6;
+    static final int END_FILE = 7;
+    static final int END_NS = 5;
+    static final int END_TAG = 3;
+    static final int START_FILE = 1;
+    static final int START_NS = 4;
+    static final int START_TAG = 2;
+    static final int TEXT = 6;
     // private int attrName[];
     // private int attrNs[];
     // private int attrResId[];
     // private int attrType[];
     // private Object attrValue[];
-    private final ByteBuffer in;
+
     private int attributeCount;
+
     private IntBuffer attrs;
+
     private int classAttribute;
     private int fileSize = -1;
     private int idAttribute;
+    private ByteBuffer in;
     private int lineNumber;
     private int nameIdx;
     private int nsIdx;
@@ -66,16 +55,16 @@ public class AxmlParser implements ResConst {
 
     private int textIdx;
 
-    public AxmlParser(byte[] data) {
+    AxmlParser(byte[] data) {
         this(ByteBuffer.wrap(data));
     }
 
-    public AxmlParser(@NotNull ByteBuffer in) {
+    private AxmlParser(@NotNull ByteBuffer in) {
         super();
         this.in = in.order(ByteOrder.LITTLE_ENDIAN);
     }
 
-    public int getAttrCount() {
+    int getAttrCount() {
         return attributeCount;
     }
 
@@ -83,31 +72,26 @@ public class AxmlParser implements ResConst {
         return attributeCount;
     }
 
-    public String getAttrName(int i) {
+    String getAttrName(int i) {
         int idx = attrs.get(i * 5 + 1);
-        if (idx >= 0 && idx < strings.length) {
-            return strings[idx];
-        }
-        return null;
+        return strings[idx];
+
     }
 
-    public String getAttrNs(int i) {
+    String getAttrNs(int i) {
         int idx = attrs.get(i * 5);
-        if (idx >= 0 && idx < strings.length) {
-            return strings[idx];
-        }
-        return null;
+        return idx >= 0 ? strings[idx] : null;
     }
 
-    String getAttrRawString(int i) {
+    private @Nullable String getAttrRawString(int i) {
         int idx = attrs.get(i * 5 + 2);
-        if (idx >= 0 && idx < strings.length) {
+        if (idx >= 0) {
             return strings[idx];
         }
         return null;
     }
 
-    public int getAttrResId(int i) {
+    int getAttrResId(int i) {
         if (resourceIds != null) {
             int idx = attrs.get(i * 5 + 1);
             if (idx >= 0 && idx < resourceIds.length) {
@@ -117,11 +101,11 @@ public class AxmlParser implements ResConst {
         return -1;
     }
 
-    public int getAttrType(int i) {
+    int getAttrType(int i) {
         return attrs.get(i * 5 + 3) >> 24;
     }
 
-    public Object getAttrValue(int i) {
+    Object getAttrValue(int i) {
         int v = attrs.get(i * 5 + 4);
 
         if (i == idAttribute) {
@@ -132,43 +116,34 @@ public class AxmlParser implements ResConst {
             return ValueWrapper.wrapClass(v, getAttrRawString(i));
         }
 
-        return switch (getAttrType(i)) {
-            case TYPE_STRING -> strings[v];
-            case TYPE_INT_BOOLEAN -> v != 0;
-            default -> v;
-        };
+        switch (getAttrType(i)) {
+            case TYPE_STRING:
+                return strings[v];
+            case TYPE_INT_BOOLEAN:
+                return v != 0;
+            default:
+                return v;
+        }
     }
 
-    public int getLineNumber() {
+    int getLineNumber() {
         return lineNumber;
     }
 
     public String getName() {
-        if (nameIdx >= 0 && nameIdx < strings.length) {
-            return strings[nameIdx];
-        }
-        return null;
+        return strings[nameIdx];
     }
 
-    public String getNamespacePrefix() {
-        if (prefixIdx >= 0 && prefixIdx < strings.length) {
-            return strings[prefixIdx];
-        }
-        return null;
+    String getNamespacePrefix() {
+        return strings[prefixIdx];
     }
 
-    public String getNamespaceUri() {
-        if (nsIdx < 0 && nsIdx >= strings.length) {
-            return strings[nsIdx];
-        }
-        return null;
+    String getNamespaceUri() {
+        return nsIdx >= 0 ? strings[nsIdx] : null;
     }
 
     public String getText() {
-        if (textIdx >= 0 && textIdx < strings.length) {
-            return strings[textIdx];
-        }
-        return null;
+        return strings[textIdx];
     }
 
     public int next() throws IOException {
@@ -276,7 +251,7 @@ public class AxmlParser implements ResConst {
                     event = TEXT;
                     break;
                 default:
-                    throw new RuntimeException("Unsupported type: " + type);
+                    throw new RuntimeException();
             }
             in.position(p + size);
             return event;

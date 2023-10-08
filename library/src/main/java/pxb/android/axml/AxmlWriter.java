@@ -1,18 +1,3 @@
-/*
- * Copyright (c) 2009-2013 Panxiaobo
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package pxb.android.axml;
 
 import org.jetbrains.annotations.NotNull;
@@ -32,42 +17,38 @@ import static pxb.android.ResConst.*;
  * @author <a href="mailto:pxb1988@gmail.com">Panxiaobo</a>
  */
 public class AxmlWriter extends AxmlVisitor {
-    static final Comparator<Attr> ATTR_CMP = new Comparator<Attr>() {
-
-        @Override
-        public int compare(Attr a, Attr b) {
-            int x = a.resourceId - b.resourceId;
+    private static final Comparator<Attr> ATTR_CMP = (a, b) -> {
+        int x = a.resourceId - b.resourceId;
+        if (x == 0) {
+            x = a.name.data.compareTo(b.name.data);
             if (x == 0) {
-                x = a.name.data.compareTo(b.name.data);
-                if (x == 0) {
-                    boolean aNsIsnull = a.ns == null;
-                    boolean bNsIsnull = b.ns == null;
-                    if (aNsIsnull) {
-                        if (bNsIsnull) {
-                            x = 0;
-                        } else {
-                            x = -1;
-                        }
+                boolean aNsIsnull = a.ns == null;
+                boolean bNsIsnull = b.ns == null;
+                if (aNsIsnull) {
+                    if (bNsIsnull) {
+                        x = 0;
                     } else {
-                        if (bNsIsnull) {
-                            x = 1;
-                        } else {
-                            x = a.ns.data.compareTo(b.ns.data);
-                        }
+                        x = -1;
                     }
-
+                } else {
+                    if (bNsIsnull) {
+                        x = 1;
+                    } else {
+                        x = a.ns.data.compareTo(b.ns.data);
+                    }
                 }
+
             }
-            return x;
         }
+        return x;
     };
-    private final List<NodeImpl> firsts = new ArrayList<NodeImpl>(3);
-    private final Map<String, Ns> nses = new HashMap<String, Ns>();
-    private final Map<String, StringItem> resourceId2Str = new HashMap<String, StringItem>();
-    private final List<Integer> resourceIds = new ArrayList<Integer>();
+    private final List<NodeImpl> firsts = new ArrayList<>(3);
+    private final Map<String, Ns> nses = new HashMap<>();
+    private final Map<String, StringItem> resourceId2Str = new HashMap<>();
+    private final List<Integer> resourceIds = new ArrayList<>();
     private final StringItems stringItems = new StringItems();
-    private List<StringItem> otherString = new ArrayList<StringItem>();
-    private List<StringItem> resourceString = new ArrayList<StringItem>();
+    private List<StringItem> otherString = new ArrayList<>();
+    private List<StringItem> resourceString = new ArrayList<>();
 
     @Override
     public NodeVisitor child(String ns, String name) {
@@ -150,7 +131,7 @@ public class AxmlWriter extends AxmlVisitor {
             out.putInt(i);
         }
 
-        Stack<Ns> stack = new Stack<Ns>();
+        Stack<Ns> stack = new Stack<>();
         for (Map.Entry<String, Ns> e : this.nses.entrySet()) {
             Ns ns = e.getValue();
             stack.push(ns);
@@ -166,7 +147,7 @@ public class AxmlWriter extends AxmlVisitor {
             first.write(out);
         }
 
-        while (stack.size() > 0) {
+        while (!stack.isEmpty()) {
             Ns ns = stack.pop();
             out.putInt(RES_XML_END_NAMESPACE_TYPE | (0x0010 << 16));
             out.putInt(24);
@@ -178,7 +159,7 @@ public class AxmlWriter extends AxmlVisitor {
         return out.array();
     }
 
-    StringItem update(StringItem item) {
+    private StringItem update(StringItem item) {
         if (item == null)
             return null;
         int i = this.otherString.indexOf(item);
@@ -191,7 +172,7 @@ public class AxmlWriter extends AxmlVisitor {
         }
     }
 
-    StringItem updateNs(StringItem item) {
+    private StringItem updateNs(StringItem item) {
         if (item == null) {
             return null;
         }
@@ -202,7 +183,7 @@ public class AxmlWriter extends AxmlVisitor {
         return update(item);
     }
 
-    StringItem updateWithResourceId(StringItem name, int resourceId) {
+    private @NotNull StringItem updateWithResourceId(@NotNull StringItem name, int resourceId) {
         String key = name.data + resourceId;
         StringItem item = this.resourceId2Str.get(key);
         if (item != null) {
@@ -220,20 +201,20 @@ public class AxmlWriter extends AxmlVisitor {
 
         public int index;
         public StringItem name;
-        public StringItem ns;
-        public int resourceId;
         public int type;
         public Object value;
         public StringItem raw;
+        StringItem ns;
+        int resourceId;
 
-        public Attr(StringItem ns, StringItem name, int resourceId) {
+        Attr(StringItem ns, StringItem name, int resourceId) {
             super();
             this.ns = ns;
             this.name = name;
             this.resourceId = resourceId;
         }
 
-        public void prepare(AxmlWriter axmlWriter) {
+        void prepare(@NotNull AxmlWriter axmlWriter) {
             ns = axmlWriter.updateNs(ns);
             if (this.name != null) {
                 if (resourceId != -1) {
@@ -253,8 +234,8 @@ public class AxmlWriter extends AxmlVisitor {
     }
 
     static class NodeImpl extends NodeVisitor {
-        private final Set<Attr> attrs = new TreeSet<Attr>(ATTR_CMP);
-        private final List<NodeImpl> children = new ArrayList<NodeImpl>();
+        private final Set<Attr> attrs = new TreeSet<>(ATTR_CMP);
+        private final List<NodeImpl> children = new ArrayList<>();
         Attr id;
         Attr style;
         Attr clz;
@@ -264,7 +245,7 @@ public class AxmlWriter extends AxmlVisitor {
         private StringItem text;
         private int textLineNumber;
 
-        public NodeImpl(String ns, String name) {
+        NodeImpl(String ns, String name) {
             super(null);
             this.ns = ns == null ? null : new StringItem(ns);
             this.name = name == null ? null : new StringItem(name);
@@ -278,7 +259,8 @@ public class AxmlWriter extends AxmlVisitor {
             Attr a = new Attr(ns == null ? null : new StringItem(ns), new StringItem(name), resourceId);
             a.type = type;
 
-            if (value instanceof ValueWrapper valueWrapper) {
+            if (value instanceof ValueWrapper) {
+                ValueWrapper valueWrapper = (ValueWrapper) value;
                 if (valueWrapper.raw != null) {
                     a.raw = new StringItem(valueWrapper.raw);
                 }
@@ -323,7 +305,7 @@ public class AxmlWriter extends AxmlVisitor {
             this.line = ln;
         }
 
-        public int prepare(AxmlWriter axmlWriter) {
+        int prepare(@NotNull AxmlWriter axmlWriter) {
             ns = axmlWriter.updateNs(ns);
             name = axmlWriter.update(name);
 
@@ -409,7 +391,7 @@ public class AxmlWriter extends AxmlVisitor {
         StringItem prefix;
         StringItem uri;
 
-        public Ns(StringItem prefix, StringItem uri, int ln) {
+        Ns(StringItem prefix, StringItem uri, int ln) {
             super();
             this.prefix = prefix;
             this.uri = uri;

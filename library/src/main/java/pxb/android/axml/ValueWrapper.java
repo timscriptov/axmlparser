@@ -5,12 +5,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class ValueWrapper {
 
-    public static final int ID = 1;
-    public static final int STYLE = 2;
-    public static final int CLASS = 3;
+    static final int ID = 1;
+    static final int STYLE = 2;
+    static final int CLASS = 3;
     public final int type;
     public final String raw;
-    public final int ref;
+    final int ref;
 
     private ValueWrapper(int type, int ref, String raw) {
         super();
@@ -20,17 +20,17 @@ public class ValueWrapper {
     }
 
     @Contract(value = "_, _ -> new", pure = true)
-    public static @NotNull ValueWrapper wrapId(int ref, String raw) {
+    static @NotNull ValueWrapper wrapId(int ref, String raw) {
         return new ValueWrapper(ID, ref, raw);
     }
 
     @Contract(value = "_, _ -> new", pure = true)
-    public static @NotNull ValueWrapper wrapStyle(int ref, String raw) {
+    static @NotNull ValueWrapper wrapStyle(int ref, String raw) {
         return new ValueWrapper(STYLE, ref, raw);
     }
 
     @Contract(value = "_, _ -> new", pure = true)
-    public static @NotNull ValueWrapper wrapClass(int ref, String raw) {
+    static @NotNull ValueWrapper wrapClass(int ref, String raw) {
         return new ValueWrapper(CLASS, ref, raw);
     }
 
