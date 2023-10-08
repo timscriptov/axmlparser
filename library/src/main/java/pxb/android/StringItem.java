@@ -15,14 +15,10 @@
  */
 package pxb.android;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
-
-public class StringItem implements Item {
+public class StringItem {
     public String data;
-    public int dataOffset;
     public int index;
+    int dataOffset;
 
     public StringItem() {
         super();
@@ -62,10 +58,5 @@ public class StringItem implements Item {
 
     public String toString() {
         return String.format("S%04d %s", index, data);
-    }
-
-    @Override
-    public void writeout(@NotNull ByteBuffer out) {
-        out.putInt(index);
     }
 }

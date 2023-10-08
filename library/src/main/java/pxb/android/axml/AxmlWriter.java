@@ -15,7 +15,7 @@
  */
 package pxb.android.axml;
 
-import pxb.android.Item;
+import org.jetbrains.annotations.NotNull;
 import pxb.android.StringItem;
 import pxb.android.StringItems;
 
@@ -351,7 +351,7 @@ public class AxmlWriter extends AxmlVisitor {
             this.textLineNumber = ln;
         }
 
-        void write(ByteBuffer out) throws IOException {
+        void write(@NotNull ByteBuffer out) {
             // start tag
             out.putInt(RES_XML_START_ELEMENT_TYPE | (0x0010 << 16));
             out.putInt(36 + attrs.size() * 20);
@@ -370,12 +370,10 @@ public class AxmlWriter extends AxmlVisitor {
                 out.putInt(attr.raw != null ? attr.raw.index : -1);
                 out.putInt((attr.type << 24) | 0x000008);
                 Object v = attr.value;
-                if (v instanceof Item) {
-                    ((Item) attr.value).writeout(out);
+                if (v instanceof StringItem) {
+                    out.putInt(((StringItem) attr.value).index);
                 } else if (v instanceof Boolean) {
                     out.putInt(Boolean.TRUE.equals(v) ? -1 : 0);
-                } else if (v instanceof Float) {
-                    out.putInt(Float.floatToIntBits((float) v));
                 } else {
                     out.putInt((Integer) attr.value);
                 }

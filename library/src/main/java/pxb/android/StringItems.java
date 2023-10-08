@@ -26,8 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StringItems extends ArrayList<StringItem> {
+
     private static final int UTF8_FLAG = 0x00000100;
-    byte[] stringData;
+    private byte[] stringData;
     private boolean useUTF8 = true;
 
     public static String @NotNull [] read(@NotNull ByteBuffer in) throws IOException {
@@ -66,7 +67,7 @@ public class StringItems extends ArrayList<StringItem> {
         return strings;
     }
 
-    static int u16length(@NotNull ByteBuffer in) {
+    private static int u16length(@NotNull ByteBuffer in) {
         int length = in.getShort() & 0xFFFF;
         if (length > 0x7FFF) {
             length = ((length & 0x7FFF) << 8) | (in.getShort() & 0xFFFF);
@@ -74,7 +75,7 @@ public class StringItems extends ArrayList<StringItem> {
         return length;
     }
 
-    static int u8length(@NotNull ByteBuffer in) {
+    private static int u8length(@NotNull ByteBuffer in) {
         int len = in.get() & 0xFF;
         if ((len & 0x80) != 0) {
             len = ((len & 0x7F) << 8) | (in.get() & 0xFF);
@@ -97,7 +98,7 @@ public class StringItems extends ArrayList<StringItem> {
         int i = 0;
         int offset = 0;
         baos.reset();
-        Map<String, Integer> map = new HashMap<String, Integer>();
+        Map<String, Integer> map = new HashMap<>();
         for (StringItem item : this) {
             item.index = i++;
             String stringData = item.data;
